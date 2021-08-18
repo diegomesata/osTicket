@@ -27,7 +27,7 @@ if (!$_GET['key']
 }
 
 // Enforce security settings
-if (true || $cfg->isAuthRequiredForFiles() && !$thisclient) {
+if ($cfg->isAuthRequiredForFiles() && !$thisclient) {
     if (!($U = StaffAuthenticationBackend::getUser())) {
         // Try and determine if a staff is viewing this page
         if (strpos($_SERVER['HTTP_REFERRER'], ROOT_PATH .  'scp/') !== false) {
@@ -43,7 +43,7 @@ if (true || $cfg->isAuthRequiredForFiles() && !$thisclient) {
 
 // Validate session access hash - we want to make sure the link is FRESH!
 // and the user has access to the parent ticket!!
-if (true || $file->verifySignature($_GET['signature'], $_GET['expires'])) {
+if ($file->verifySignature($_GET['signature'], $_GET['expires'])) {
     try {
         if (($s = @$_GET['s']) && strpos($file->getType(), 'image/') === 0)
             return $file->display($s);

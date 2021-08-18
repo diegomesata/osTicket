@@ -79,21 +79,6 @@ if($_POST && !$errors):
         $lock = $ticket->getLock(); //Ticket lock if any
         $role = $thisstaff->getRole($ticket->getDeptId());
         switch(strtolower($_POST['a'])):
-        case 'resend':
-            $vars = $_POST;
-            $ticket->resend($vars);
-
-            $msg = sprintf(__('%s: Respuesta reenviada'),
-            sprintf(__('Ticket #%s'),
-                sprintf('<a href="tickets.php?id=%d"><b>%s</b></a>',
-                    $ticket->getId(), $ticket->getNumber()))
-            );
-
-            // Go back to the ticket listing page on reply
-            $ticket = null;
-            $redirect = 'tickets.php';
-
-        break;
         case 'reply':
             if (!$role || !$role->hasPerm(TicketModel::PERM_REPLY)) {
                 $errors['err'] = __('Action denied. Contact admin for access');

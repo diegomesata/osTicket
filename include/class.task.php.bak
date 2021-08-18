@@ -164,10 +164,6 @@ class TaskModel extends VerySimpleModel {
     function getCreateDate() {
         return $this->created;
     }
-    
-    function getObjectId() {
-        return $this->object_id;
-    }
 
     function getDueDate() {
         return $this->duedate;
