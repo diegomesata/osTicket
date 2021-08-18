@@ -47,6 +47,18 @@ $ost->addExtraHeader('<meta name="tip-namespace" content="dashboard.dashboard" /
     "$('#content').data('tipNamespace', 'dashboard.dashboard');");
 
 require(STAFFINC_DIR.'header.inc.php');
+
 require_once(STAFFINC_DIR.'dashboard.inc.php');
+?>
+
+<br>
+
+<a href="stats.php">Estadísticas Personalizadas</a>
+
+<br>
+
+<?php
+
+
 include(STAFFINC_DIR.'footer.inc.php');
 ?>
