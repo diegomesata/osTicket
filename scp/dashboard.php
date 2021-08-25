@@ -53,7 +53,7 @@ require_once(STAFFINC_DIR.'dashboard.inc.php');
 
 <br>
 
-<a href="stats.php">Estadísticas Personalizadas</a>
+<a href="stats.php">EstadÃ­sticas Personalizadas</a>
 
 <br>
 

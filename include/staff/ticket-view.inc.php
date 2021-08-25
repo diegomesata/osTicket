@@ -875,14 +875,7 @@ if ($errors['err'] && isset($_POST['a'])) {
                     ?></span></a>
                 </td>
               </tr>
-               <tr>
-               <td>
-                <input class="emailcollab" type='checkbox' value='1' name="emailcollab"
-                    id="t<?php echo $ticket->getThreadId(); ?>-emailcollab"
-                        <?php echo ((!$info['emailcollab'] && !$errors) || isset($info['emailcollab']))?'checked="checked"':''; ?>
-                        style="display:<?php echo $ticket->getThread()->getNumCollaborators() ? 'inline-block': 'none'; ?>;"
-                        >
-               </td>
+              <tr><td>&nbsp;</td>
                    <td>
                    <div style="margin-bottom:2px;">
                     <?php
@@ -1128,14 +1121,14 @@ if ($errors['err'] && isset($_POST['a'])) {
          </tbody>
         </table>
         <p  style="text-align:center;">
-            <br/><br/><input type="checkbox" id="includeThread" name="includeThread" /> Incluir Conversación &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            <br/><br/><input type="checkbox" id="includeThread" name="includeThread" /> Incluir ConversaciÃ³n &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
             <input type="checkbox" id="includeCollaborators" name="includeCollaborators" /> Incluir Copia A &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-            <input type="checkbox" id="includeQuality" name="includeQuality" checked /> Indicadores de Calidad
+            <input type="checkbox" id="includeQuality" name="includeQuality" checked /> Indicadores de Calidad &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;            
             <br/><br/>
             <input class="save pending" type="submit" value="<?php echo __('Post Reply');?>"> 
             <input class="" type="reset" value="<?php echo __('Reset');?>">
 
-            <input class="" onclick="doSubmit();"  type="button" value="<?php echo __('Reenviar Última Rta');?>">
+            <input class="" onclick="doSubmit();"  type="button" value="<?php echo __('Reenviar Ãšltima Rta');?>">
         </p>
     </form>
     <script>
@@ -1143,8 +1136,7 @@ if ($errors['err'] && isset($_POST['a'])) {
                         $('#rsSignature').val($("input[type='radio']:checked").val());
                         $('#rsIncludeQuality').prop('checked', $('#includeQuality').prop('checked')); 
                         $('#rsIncludeThread').prop('checked', $('#includeThread').prop('checked')); 
-                        $('#rsIncludeCollaborators').prop('checked', $('#includeCollaborators').prop('checked')); 
-                        $('#rsEmailcollab').prop('checked', $('.emailcollab').prop('checked')); 
+                        $('#rsIncludeCollaborators').prop('checked', $('#includeCollaborators').prop('checked'));                         
                         $('#resend').submit();
                     }
     </script>
@@ -1161,7 +1153,7 @@ if ($errors['err'] && isset($_POST['a'])) {
         <input type="text" id="rsSignature" name="signature" /> 
         <input type='checkbox' id="rsEmailcollab" name="emailcollab" />
 
-        <input id="resendbutton" type="submit" title="Reenvía la última respuesta" value="<?php echo __('Renviar');?>">
+        <input id="resendbutton" type="submit" title="ReenvÃ­a la Ãºltima respuesta" value="<?php echo __('Renviar');?>">
     </form>
 
     <?php

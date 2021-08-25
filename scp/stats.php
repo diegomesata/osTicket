@@ -142,14 +142,14 @@ $result = db_query($sql4);
       , COUNT(`ost_thread_entry`.`quality_item_id`) AS count
       , `ost_quality_item`.`item`
   FROM
-      `dissertu_tiquetes`.`ost_thread`
-      INNER JOIN `dissertu_tiquetes`.`ost_thread_entry` 
+      `ost_thread`
+      INNER JOIN `ost_thread_entry` 
           ON (`ost_thread`.`id` = `ost_thread_entry`.`thread_id`)
-      INNER JOIN `dissertu_tiquetes`.`ost_staff` 
+      INNER JOIN `ost_staff` 
           ON (`ost_thread_entry`.`staff_id` = `ost_staff`.`staff_id`)
-      INNER JOIN `dissertu_tiquetes`.`ost_quality_item` 
+      INNER JOIN `ost_quality_item` 
           ON (`ost_thread_entry`.`quality_item_id` = `ost_quality_item`.`quality_item_id`)
-      INNER JOIN `dissertu_tiquetes`.`ost_ticket` 
+      INNER JOIN `ost_ticket` 
           ON (`ost_ticket`.`ticket_id` = `ost_thread`.`object_id`)
   WHERE (`ost_thread_entry`.`quality_item_id` IS NOT  NULL)
   AND ost_thread_entry.created >= '" . $from . "' and ost_thread_entry.created <= '" . $to

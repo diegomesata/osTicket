@@ -3369,10 +3369,7 @@ implements RestrictedAccess, Threadable, Searchable {
 
         if (!$vars['ip_address'] && $_SERVER['REMOTE_ADDR'])
             $vars['ip_address'] = $_SERVER['REMOTE_ADDR'];
-
-        // if (!($response = $this->getThread()->addResponse($vars, $errors)))
-        //     return null;
-
+        
         //Get last response
 
         $entries = $this->getResponses();        
@@ -3382,82 +3379,44 @@ implements RestrictedAccess, Threadable, Searchable {
             $response = $entry;
         }
 
-        $response = $response->model;
-        
-        //$rid = $response->getId();
-         
-        $dept = $this->getDept();
+        //$response = //$response->model;        
 
-        $assignee = $this->getStaff();
-        // Set status - if checked.
-        // if ($vars['reply_status_id']
-        //     && $vars['reply_status_id'] != $this->getStatusId()
-        // ) {
-        //     $this->setStatus($vars['reply_status_id']);
-        // }
+        //Tomado de class.thread_actions.resend
+        $object = $this;
 
+        $dept = $object->getDept();
+        $poster = $response->getStaff();
 
-        // Claim on response bypasses the department assignment restrictions
-        // $claim = ($claim
-        //         && $cfg->autoClaimTickets()
-        //         && !$dept->disableAutoClaim());
-        // if ($claim && $thisstaff && $this->isOpen() && !$this->getStaffId()) {
-        //     $this->setStaffId($thisstaff->getId()); //direct assignment;
-        // }
-
-        //$this->lastrespondent = $response->staff;
-
-       // $this->onResponse($response, array('assignee' => $assignee)); //do house cleaning..
-
-        /* email the user??  - if disabled - then bail out */
-        //if (!$alert)
-          //  return $response;
-
-        $email = $dept->getEmail();
-        $options = array('thread'=>$response);
-        $signature = $from_name = '';
-        if ($thisstaff && $vars['signature']=='mine')
-            $signature=$thisstaff->getSignature();
-        elseif ($vars['signature']=='dept' && $dept->isPublic())
-            $signature=$dept->getSignature();
-
-        if ($thisstaff && ($type=$thisstaff->getReplyFromNameType())) {
-            switch ($type) {
-                case 'mine':
-                    if (!$cfg->hideStaffName())
-                        $from_name = (string) $thisstaff->getName();
-                    break;
-                case 'dept':
-                    if ($dept->isPublic())
-                        $from_name = $dept->getName();
-                    break;
-                case 'email':
-                default:
-                    $from_name =  $email->getName();
-            }
-
-            if ($from_name)
-                $options += array('from_name' => $from_name);
-
-        }
+        if ($thisstaff && $vars['signature'] == 'mine')
+            $signature = $thisstaff->getSignature();
+        elseif ($poster && $vars['signature'] == 'theirs')
+            $signature = $poster->getSignature();
+        elseif ($vars['signature'] == 'dept' && $dept && $dept->isPublic())
+            $signature = $dept->getSignature();
+        else
+            $signature = '';
 
         $variables = array(
             'response' => $response,
             'signature' => $signature,
-            'staff' => $thisstaff,
-            'poster' => $thisstaff
-        );
+            'staff' => $response->getStaff(),
+            'poster' => $response->getStaff());
+        $options = array('thread' => $response);
 
-        $user = $this->getOwner();
-        if (($email=$dept->getEmail())
-            && ($tpl = $dept->getTemplate())
-            && ($msg=$tpl->getReplyMsgTemplate())
-        ) {
-            $msg = $this->replaceVars($msg->asArray(),
-                $variables + array('recipient' => $user)
-            );
-            $attachments = $cfg->emailAttachments()?$response->getAttachments():array();
-            
+        // Resend response to collabs
+        if (($object instanceof Ticket)
+                && ($email=$dept->getEmail())
+                && ($tpl = $dept->getTemplate())
+                && ($msg=$tpl->getReplyMsgTemplate())) {
+
+            $recipients = json_decode($response->recipients, true);
+
+            $msg = $object->replaceVars($msg->asArray(),
+                $variables + array('recipient' => $object->getOwner()));
+
+            $attachments = $cfg->emailAttachments()
+                ? $response->getAttachments() : array();
+
             $body = $msg['body'];
 
             //Includes thread
@@ -3465,25 +3424,29 @@ implements RestrictedAccess, Threadable, Searchable {
                 $body = $this->addMessageThread($body, $response->getId());
 
             //Si hay que incluir los colaboradores
-            if($vars['includeCollaborators'] == 'on' && $vars['emailcollab'])
+            if($vars['includeCollaborators'] == 'on')
                 $body = $this->addMessageCollaborators($body);      
 
             if($vars['includeQuality'] == 'on')                
                 $body = $this->addQualityItems($body, $response->getId(), $response->getThreadId());
-            
-            $email->send($user, $msg['subj'] . ' re', $body, $attachments,
-                $options);
-        }
 
-        if ($vars['emailcollab']) {
-            $this->notifyCollaborators($response,
-                array(
-                    'signature' => $signature,
-                    'from_name' => $from_name),
-                $vars['includeThread'] == 'on',
-                $vars['includeCollaborators'] == 'on' && $vars['emailcollab']
-            );
+            $email->send($object->getOwner(), $msg['subj'] . ' re', $body,
+                $attachments, $options, $recipients);
         }
+        // TODO: Add an option to the dialog
+        if ($object instanceof Task)
+          $object->notifyCollaborators($response, array('signature' => $signature));
+
+        // Log an event that the item was resent
+        $object->logEvent('resent', array('entry' => $response->id));
+
+        $type = array('type' => 'resent');
+        Signal::send('object.edited', $object, $type);
+
+        // Flag the entry as resent
+        $response->flags |= ThreadEntry::FLAG_RESENT;
+        $response->save();
+
         return $response;
     }
 
@@ -3604,7 +3567,7 @@ implements RestrictedAccess, Threadable, Searchable {
                 $body = $this->addMessageThread($body, $response->getId());
 
             //Si hay que incluir los colaboradores
-            if($vars['includeCollaborators'] == 'on' && $vars['emailcollab'])
+            if($vars['includeCollaborators'] == 'on')
                 $body = $this->addMessageCollaborators($body);      
 
             $rid = $response->getId();
@@ -3613,23 +3576,15 @@ implements RestrictedAccess, Threadable, Searchable {
                 $body = $this->addQualityItems($body, $response->getId(), $response->getThreadId());
             
              //Send email to recepients
-            $email->send($recipients, $msg['subj'], $msg['body'],
+            $email->send($recipients, $msg['subj'], $body,
                     $attachments, $options);
         }
-
-        if ($vars['emailcollab']) {
-            $this->notifyCollaborators($response,
-                array(
-                    'signature' => $signature,
-                    'from_name' => $from_name),
-                $vars['includeThread'] == 'on',
-                $vars['includeCollaborators'] == 'on' && $vars['emailcollab']
-            );
-        }
+        
         return $response;
     }
     
     function addQualityItems($body, $id, $tid){
+        global $cfg;
         $sql = 'SELECT * FROM ost_quality_item ORDER BY quality_item_id';
 
         $result = db_query($sql);
@@ -3637,9 +3592,11 @@ implements RestrictedAccess, Threadable, Searchable {
         $body .= "<br/><br/><h3>INDICADORES DE CALIDAD</h3>";
         $body .= "<p><i>Evalúe la calidad de nuestra respuesta:</i></p>";
 
+        $url = $cfg->getUrl();
+
         while ($row = $result->fetch_assoc()) {            
             $qualityid = $row['quality_item_id'];
-            $body .= '<a style="font-size: x-small" target="_blank" href="http://www.dissertum.com/tiquetes/quality.php?tn=' . $this->getNumber() . '&rid=' . $id . '&qid=' . $qualityid . '&tid=' . $tid . '">' . $row['item'] . '</a><br/>';                
+            $body .= '<a style="font-size: x-small" target="_blank" href="' . $url . 'quality.php?tn=' . $this->getNumber() . '&rid=' . $id . '&qid=' . $qualityid . '&tid=' . $tid . '">' . $row['item'] . '</a><br/>';                
         }
 
         return $body;
